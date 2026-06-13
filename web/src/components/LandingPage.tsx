@@ -3,13 +3,27 @@
 import type { RTMClient } from "agora-rtm";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import {
+	Suspense,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { EventTimeline } from "@/components/EventTimeline";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { QuickstartPreCallCard } from "@/components/QuickstartPreCallCard";
 import { ShareButton } from "@/components/share-button";
-import { getConfig, startAgent, stopAgent } from "@/services/api";
+import {
+	getConfig,
+	startAgent,
+	stopAgent,
+	subscribeWebhooks,
+	type WebhookEvent,
+} from "@/services/api";
 import type { AgoraRenewalTokens, AgoraTokenData } from "@/types/conversation";
 
 const ConversationComponent = dynamic(
@@ -94,9 +108,21 @@ export default function LandingPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [agentJoinError, setAgentJoinError] = useState(false);
 
+	// Stable per-tab session id used to correlate this client's agent with the
+	// server-side webhook callbacks (via the agent's `session` label).
+	const sessionId = useMemo(() => crypto.randomUUID(), []);
+	const [webhookEvents, setWebhookEvents] = useState<WebhookEvent[]>([]);
+
 	useEffect(() => {
 		import("agora-rtc-react").catch(() => {});
 		import("agora-rtm").catch(() => {});
+	}, []);
+
+	useEffect(() => {
+		const unsubscribe = subscribeWebhooks((event) =>
+			setWebhookEvents((prev) => [...prev, event].slice(-200)),
+		);
+		return unsubscribe;
 	}, []);
 
 	const handleStartConversation = async () => {
@@ -113,6 +139,7 @@ export default function LandingPage() {
 					config.channel_name,
 					Number(config.agent_uid),
 					Number(config.uid),
+					sessionId,
 				).catch((err) => {
 					console.error("Failed to start conversation with agent:", err);
 					setAgentJoinError(true);
@@ -236,6 +263,16 @@ export default function LandingPage() {
 							Failed to load conversation data.
 						</p>
 					)}
+				</div>
+			</div>
+
+			<div className="z-10 w-full px-4 pb-24 md:px-6">
+				<div className="mx-auto w-full max-w-3xl">
+					<EventTimeline
+						events={webhookEvents}
+						ownSession={sessionId}
+						onClear={() => setWebhookEvents([])}
+					/>
 				</div>
 			</div>
 

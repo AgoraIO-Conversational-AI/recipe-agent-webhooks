@@ -32,6 +32,18 @@ const nextConfig: NextConfig = {
         source: '/api/stopAgent',
         destination: `${backendUrl}/stopAgent`,
       },
+      {
+        source: '/api/ncsNotify',
+        destination: `${backendUrl}/ncsNotify`,
+      },
+      {
+        source: '/api/webhooks/stream',
+        destination: `${backendUrl}/webhooks/stream`,
+      },
+      {
+        source: '/api/webhooks/reset',
+        destination: `${backendUrl}/webhooks/reset`,
+      },
     ]
   },
 }

@@ -67,6 +67,28 @@ async function verifyRewriteContract() {
       ),
       'next.config.ts should rewrite /api/stopAgent to /stopAgent on the Python backend',
     )
+    assert(
+      rewrites.some(
+        (rewrite) => rewrite.source === '/api/ncsNotify' && rewrite.destination === 'http://localhost:8000/ncsNotify',
+      ),
+      'next.config.ts should rewrite /api/ncsNotify to /ncsNotify on the Python backend',
+    )
+    assert(
+      rewrites.some(
+        (rewrite) =>
+          rewrite.source === '/api/webhooks/stream' &&
+          rewrite.destination === 'http://localhost:8000/webhooks/stream',
+      ),
+      'next.config.ts should rewrite /api/webhooks/stream to /webhooks/stream on the Python backend',
+    )
+    assert(
+      rewrites.some(
+        (rewrite) =>
+          rewrite.source === '/api/webhooks/reset' &&
+          rewrite.destination === 'http://localhost:8000/webhooks/reset',
+      ),
+      'next.config.ts should rewrite /api/webhooks/reset to /webhooks/reset on the Python backend',
+    )
   } finally {
     if (originalBackendUrl) {
       process.env.AGENT_BACKEND_URL = originalBackendUrl

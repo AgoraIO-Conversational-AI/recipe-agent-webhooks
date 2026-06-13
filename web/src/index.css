@@ -182,3 +182,81 @@ body {
 		max-height: 3.5rem;
 	}
 }
+
+/* Server-side webhook timeline (webhooks recipe) */
+.event-timeline {
+	width: 100%;
+	border: 1px solid hsl(var(--border));
+	border-radius: 0.75rem;
+	background: hsl(var(--card) / 0.2);
+	padding: 0.75rem 1rem;
+	max-height: 16rem;
+	overflow-y: auto;
+}
+
+.event-timeline__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+.event-timeline__header h2 {
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.event-timeline__header button {
+	font-size: 0.75rem;
+	border: 1px solid hsl(var(--border));
+	border-radius: 0.5rem;
+	padding: 0.125rem 0.625rem;
+	color: hsl(var(--muted-foreground));
+}
+
+.event-timeline__empty {
+	font-size: 0.8125rem;
+	color: hsl(var(--muted-foreground));
+}
+
+.event-timeline ul {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.event-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.8125rem;
+	border: 1px solid hsl(var(--border) / 0.4);
+	border-radius: 0.5rem;
+	padding: 0.375rem 0.625rem;
+}
+
+.event-row--mine {
+	border-color: hsl(var(--primary) / 0.6);
+	background: hsl(var(--primary) / 0.08);
+}
+
+.event-row__name {
+	font-weight: 600;
+}
+
+.event-row__channel,
+.event-row__reason {
+	color: hsl(var(--muted-foreground));
+	font-size: 0.75rem;
+}
+
+.event-row time {
+	margin-left: auto;
+	font-variant-numeric: tabular-nums;
+	font-size: 0.6875rem;
+	color: hsl(var(--muted-foreground) / 0.7);
+}

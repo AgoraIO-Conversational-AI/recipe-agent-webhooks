@@ -7,7 +7,6 @@ import {
 	type ConnectionIssue,
 	getConversationIssueSeverity,
 } from "@/components/ConversationErrorCard";
-import { EventTimeline, type TimelineEvent } from "@/components/EventTimeline";
 import { MicrophoneSelector } from "@/components/MicrophoneSelector";
 import { QuickstartConversationLayout } from "@/components/QuickstartConversationLayout";
 import {
@@ -109,15 +108,6 @@ export default function ConversationComponent({
 	const [connectionIssues, setConnectionIssues] = useState<ConnectionIssue[]>(
 		[],
 	);
-	const [events, setEvents] = useState<TimelineEvent[]>([]);
-	const addEvent = useCallback((evt: Omit<TimelineEvent, "id" | "ts">) => {
-		setEvents((prev) =>
-			[
-				...prev,
-				{ id: crypto.randomUUID(), ts: Date.now(), ...evt },
-			].slice(-50),
-		);
-	}, []);
 	const addConnectionIssue = useCallback((issue: ConnectionIssue) => {
 		setConnectionIssues((prev) => {
 			const isDuplicate = prev.some(
@@ -208,29 +198,12 @@ export default function ConversationComponent({
 
 				ai.on(AgoraVoiceAIEvents.TRANSCRIPT_UPDATED, (t) => {
 					setRawTranscript([...t]);
-					// Surface the most recent completed turn in the timeline
-					const latest = [...t].reverse().find((item) => item.text);
-					if (latest?.text) {
-						const role =
-							latest.uid && latest.uid !== "0" ? "agent" : "user";
-						addEvent({
-							kind: "turn",
-							label: role,
-							detail: String(latest.text).slice(0, 80),
-						});
-					}
 				});
 				ai.on(AgoraVoiceAIEvents.AGENT_STATE_CHANGED, (_, event) => {
 					setAgentState(event.state);
-					addEvent({ kind: "state", label: String(event.state) });
 				});
 				ai.on(AgoraVoiceAIEvents.AGENT_METRICS, (_, metrics) => {
 					setAgentMetrics((prev) => [...prev, metrics].slice(-8));
-					addEvent({
-						kind: "metric",
-						label: `${metrics.type}: ${metrics.name}`,
-						detail: `${Math.round(metrics.value)}ms`,
-					});
 				});
 				ai.on(AgoraVoiceAIEvents.MESSAGE_ERROR, (agentUserId, error) => {
 					addConnectionIssue({
@@ -240,11 +213,6 @@ export default function ConversationComponent({
 						code: error.code,
 						message: error.message,
 						timestamp: normalizeTimestampMs(error.timestamp),
-					});
-					addEvent({
-						kind: "error",
-						label: "message error",
-						detail: String(error.message ?? error.code),
 					});
 				});
 				ai.on(
@@ -274,11 +242,6 @@ export default function ConversationComponent({
 						message: `${error.type}: ${error.message}`,
 						timestamp: normalizeTimestampMs(error.timestamp),
 					});
-					addEvent({
-						kind: "error",
-						label: "agent error",
-						detail: `${error.type}: ${error.message}`,
-					});
 				});
 				ai.subscribeMessage(agoraData.channel);
 			} catch (error) {
@@ -305,7 +268,6 @@ export default function ConversationComponent({
 		rtmClient,
 		agoraData.channel,
 		addConnectionIssue,
-		addEvent,
 	]);
 
 	useEffect(() => {
@@ -492,7 +454,6 @@ export default function ConversationComponent({
 					agentState={agentState}
 				/>
 			}
-			eventTimeline={<EventTimeline events={events} />}
 			visualizer={
 				<section
 					className="relative flex h-full min-h-[20rem] w-full max-w-4xl items-center justify-center"
