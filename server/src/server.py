@@ -24,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from agora_agent.agentkit.token import generate_convo_ai_token
 from agent import Agent
+import webhooks
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -81,6 +82,7 @@ class StartAgentRequest(BaseModel):
     channelName: str
     rtcUid: int
     userUid: int
+    sessionId: Optional[str] = None
     parameters: Optional[Dict[str, Any]] = None
 
 
@@ -158,6 +160,7 @@ async def start_agent(request: StartAgentRequest):
             channel_name=request.channelName,
             agent_uid=request.rtcUid,
             user_uid=request.userUid,
+            session_id=request.sessionId,
             output_audio_codec=output_audio_codec,
         )
         return {"code": 0, "msg": "success", "data": result}
@@ -190,6 +193,7 @@ async def stop_agent(request: StopAgentRequest):
 
 
 app.include_router(router)
+app.include_router(webhooks.router)
 
 
 if __name__ == "__main__":

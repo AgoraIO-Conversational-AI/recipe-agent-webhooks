@@ -60,9 +60,10 @@ class Agent:
         channel_name: str,
         agent_uid: int,
         user_uid: int,
+        session_id: Optional[str] = None,
         output_audio_codec: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Start the events agent."""
+        """Start the agent."""
         if not channel_name or not str(channel_name).strip():
             raise ValueError("channel_name is required and cannot be empty")
         if agent_uid <= 0:
@@ -71,6 +72,7 @@ class Agent:
             raise ValueError("user_uid is required and cannot be empty")
 
         name = f"agent_{channel_name}_{agent_uid}_{int(time.time())}"
+        label_session = session_id or name
 
         llm = OpenAI(
             api_key=self.openai_api_key,
@@ -128,6 +130,7 @@ class Agent:
             .with_stt(stt)
             .with_llm(llm)
             .with_tts(tts)
+            .with_labels({"recipe": "webhooks", "session": label_session})
         )
 
         session = agora_agent.create_async_session(
