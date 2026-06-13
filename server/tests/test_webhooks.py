@@ -37,3 +37,21 @@ def test_reset_clears(tmp_path, monkeypatch):
     wh.store_event({"eventType": 101, "notifyMs": 1, "sid": "s", "payload": {}})
     wh.reset_events()
     assert wh.recent_events() == []
+
+
+import hashlib, hmac
+
+
+def test_verify_dev_mode_when_secret_unset(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+    assert wh.verify_signature(None, b'{"a":1}', None) is True
+    assert wh.verify_signature("", b'{"a":1}', "anything") is True
+
+
+def test_verify_requires_matching_hmac_when_secret_set(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+    secret, raw = "shh", b'{"eventType":101}'
+    good = hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()
+    assert wh.verify_signature(secret, raw, good) is True
+    assert wh.verify_signature(secret, raw, "deadbeef") is False
+    assert wh.verify_signature(secret, raw, None) is False

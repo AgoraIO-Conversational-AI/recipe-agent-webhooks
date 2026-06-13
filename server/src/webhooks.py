@@ -89,3 +89,15 @@ def reset_events() -> None:
         conn.commit()
     finally:
         conn.close()
+
+
+def verify_signature(secret: Optional[str], raw_body: bytes,
+                     signature_v2: Optional[str]) -> bool:
+    """Accept if no secret is configured (dev mode); otherwise require a matching
+    Agora-Signature-V2 (HMAC-SHA256 over the raw body)."""
+    if not secret:
+        return True
+    if not signature_v2:
+        return False
+    expected = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature_v2)
