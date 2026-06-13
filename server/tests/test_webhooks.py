@@ -78,3 +78,57 @@ def test_event_display_name(tmp_path, monkeypatch):
     assert wh.event_display_name(102) == "Agent stopped"
     assert wh.event_display_name(777) == "Event 777"
     assert wh.event_display_name(None) == "Event"
+
+
+import asyncio
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+
+def _client(wh):
+    app = FastAPI()
+    app.include_router(wh.router)
+    return TestClient(app)
+
+
+def test_ncsnotify_stores_and_returns_200_dev_mode(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+    client = _client(wh)
+    body = {"eventType": 101, "notifyMs": 1, "sid": "s",
+            "payload": {"channelName": "c", "labels": {"session": "abc"}}}
+    r = client.post("/ncsNotify", json=body)
+    assert r.status_code == 200 and r.json()["code"] == 0
+    assert wh.recent_events()[0]["eventType"] == 101
+
+
+def test_ncsnotify_rejects_bad_signature_when_secret_set(tmp_path, monkeypatch):
+    monkeypatch.setenv("AGORA_NOTIFICATION_SECRET", "shh")
+    wh = _fresh(tmp_path, monkeypatch)
+    client = _client(wh)
+    r = client.post("/ncsNotify", json={"eventType": 101},
+                    headers={"Agora-Signature-V2": "wrong"})
+    assert r.status_code == 401
+    assert wh.recent_events() == []
+
+
+def test_reset_endpoint(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+    client = _client(wh)
+    client.post("/ncsNotify", json={"eventType": 101, "payload": {}})
+    r = client.post("/webhooks/reset")
+    assert r.status_code == 200
+    assert wh.recent_events() == []
+
+
+def test_sse_hub_publish_subscribe(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+
+    async def go():
+        hub = wh.SseHub()
+        q = hub.subscribe()
+        hub.publish({"eventType": 101})
+        got = await asyncio.wait_for(q.get(), timeout=1)
+        hub.unsubscribe(q)
+        return got
+
+    assert asyncio.run(go())["eventType"] == 101

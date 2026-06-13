@@ -122,3 +122,81 @@ def event_display_name(event_type: Optional[int]) -> str:
     if event_type is None:
         return "Event"
     return f"Event {event_type}"
+
+
+from fastapi import APIRouter, Request, Response
+from fastapi.responses import StreamingResponse
+
+
+class SseHub:
+    """In-process fan-out of received events to connected SSE clients."""
+
+    def __init__(self) -> None:
+        self._subscribers: Set["asyncio.Queue[Dict[str, Any]]"] = set()
+
+    def subscribe(self) -> "asyncio.Queue[Dict[str, Any]]":
+        q: "asyncio.Queue[Dict[str, Any]]" = asyncio.Queue()
+        self._subscribers.add(q)
+        return q
+
+    def unsubscribe(self, q) -> None:
+        self._subscribers.discard(q)
+
+    def publish(self, event: Dict[str, Any]) -> None:
+        for q in list(self._subscribers):
+            q.put_nowait(event)
+
+
+hub = SseHub()
+router = APIRouter()
+
+
+@router.post("/ncsNotify")
+async def ncs_notify(request: Request):
+    """Receive an Agora NCS notification callback."""
+    raw = await request.body()
+    secret = os.getenv("AGORA_NOTIFICATION_SECRET")
+    signature = request.headers.get("Agora-Signature-V2")
+    if not verify_signature(secret, raw, signature):
+        return Response(
+            content=json.dumps({"code": 1, "msg": "invalid signature"}),
+            media_type="application/json", status_code=401,
+        )
+    if not secret:
+        logger.warning("dev mode: webhook signature unverified")
+    try:
+        body = json.loads(raw or b"{}")
+    except json.JSONDecodeError:
+        body = {}
+    record = store_event(parse_event(body))
+    hub.publish(record)
+    return {"code": 0, "msg": "success"}
+
+
+@router.get("/webhooks/stream")
+async def webhooks_stream(request: Request):
+    """SSE: replay recent events, then stream new ones live."""
+
+    async def gen():
+        for rec in recent_events():
+            yield f"data: {json.dumps(rec)}\n\n"
+        q = hub.subscribe()
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    rec = await asyncio.wait_for(q.get(), timeout=15)
+                    yield f"data: {json.dumps(rec)}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            hub.unsubscribe(q)
+
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+@router.post("/webhooks/reset")
+async def webhooks_reset():
+    reset_events()
+    return {"code": 0, "msg": "cleared"}
