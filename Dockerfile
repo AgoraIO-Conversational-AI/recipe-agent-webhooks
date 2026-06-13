@@ -15,6 +15,9 @@ COPY --chown=app:app server/src /app/server/src
 # Drop privileges for the running process.
 USER app
 
+# Ephemeral SQLite store for received NCS webhook events.
+ENV WEBHOOKS_DB_PATH=/tmp/webhooks.db
+
 # server.py reads $PORT (default 8000) and binds 0.0.0.0.
 EXPOSE 8000
 CMD ["python", "/app/server/src/server.py"]
