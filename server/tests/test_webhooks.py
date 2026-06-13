@@ -55,3 +55,26 @@ def test_verify_requires_matching_hmac_when_secret_set(tmp_path, monkeypatch):
     assert wh.verify_signature(secret, raw, good) is True
     assert wh.verify_signature(secret, raw, "deadbeef") is False
     assert wh.verify_signature(secret, raw, None) is False
+
+
+def test_parse_event_extracts_envelope(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+    body = {"eventType": 102, "notifyMs": 9, "sid": "abc",
+            "payload": {"channelName": "c", "leaveReason": "idle", "labels": {"session": "s1"}}}
+    ev = wh.parse_event(body)
+    assert ev["eventType"] == 102 and ev["sid"] == "abc"
+    assert ev["payload"]["leaveReason"] == "idle"
+
+
+def test_parse_event_tolerates_missing_fields(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+    ev = wh.parse_event({"eventType": 777})  # unknown type, no payload
+    assert ev["eventType"] == 777 and ev["payload"] == {}
+
+
+def test_event_display_name(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+    assert wh.event_display_name(101) == "Agent started"
+    assert wh.event_display_name(102) == "Agent stopped"
+    assert wh.event_display_name(777) == "Event 777"
+    assert wh.event_display_name(None) == "Event"

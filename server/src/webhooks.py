@@ -101,3 +101,24 @@ def verify_signature(secret: Optional[str], raw_body: bytes,
         return False
     expected = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature_v2)
+
+
+def parse_event(body: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize the NCS envelope; retain the full raw payload verbatim."""
+    return {
+        "eventType": body.get("eventType"),
+        "notifyMs": body.get("notifyMs"),
+        "sid": body.get("sid"),
+        "payload": body.get("payload") or {},
+    }
+
+
+_EVENT_NAMES = {101: "Agent started", 102: "Agent stopped"}
+
+
+def event_display_name(event_type: Optional[int]) -> str:
+    if event_type in _EVENT_NAMES:
+        return _EVENT_NAMES[event_type]
+    if event_type is None:
+        return "Event"
+    return f"Event {event_type}"
