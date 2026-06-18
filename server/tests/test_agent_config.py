@@ -11,8 +11,21 @@ def test_agent_constructs():
     assert inst.openai_model
 
 
+def _all_route_paths(app):
+    """Collect paths from both direct routes and included sub-routers (FastAPI compat)."""
+    paths = set()
+    for r in app.routes:
+        if hasattr(r, "path"):
+            paths.add(r.path)
+        if hasattr(r, "original_router"):
+            for sr in r.original_router.routes:
+                if hasattr(sr, "path"):
+                    paths.add(sr.path)
+    return paths
+
+
 def test_webhooks_routes_are_mounted():
-    paths = {r.path for r in s.app.routes}
+    paths = _all_route_paths(s.app)
     assert "/ncsNotify" in paths
     assert "/webhooks/stream" in paths
     assert "/webhooks/reset" in paths
