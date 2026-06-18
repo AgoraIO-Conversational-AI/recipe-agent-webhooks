@@ -9,7 +9,7 @@ For coding agents working in `recipe-agent-webhooks`. This repository is the
   generation, agent session lifecycle, and a self-contained NCS webhook receiver
   (`server/src/webhooks.py`). Uses the managed `OpenAI` vendor (Agora-managed,
   keyless) with a simple system prompt plus `with_labels`. SDK:
-  `agora-agents>=2.0.0` (`import agora_agent`).
+  `agora-agents>=2.3.0` (`import agora_agent`).
 - **`web/`** — Next.js 16 / React 19 / TypeScript frontend (:3000). The
   net-new work is here: a Server-Sent-Events subscription and the webhook
   `EventTimeline`.
