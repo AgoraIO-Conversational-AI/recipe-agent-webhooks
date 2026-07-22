@@ -24,11 +24,11 @@ export function QuickstartPreCallCard({
 			}}
 		>
 			<h1 className="text-[28px] font-medium leading-[1.2] text-white">
-				Translator Recipe
+				Webhooks Recipe
 			</h1>
 			<p className="mt-[14px] text-sm font-medium leading-6 text-muted-foreground">
-				Speak in the source language; the agent translates and speaks it in the
-				target language. Set SOURCE_LANG / TARGET_LANG.
+				Start and stop the agent to observe server-side lifecycle events in real
+				time.
 			</p>
 
 			<Button
