@@ -193,7 +193,14 @@ async def webhooks_stream(request: Request):
         finally:
             hub.unsubscribe(q)
 
-    return StreamingResponse(gen(), media_type="text/event-stream")
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post("/webhooks/reset")

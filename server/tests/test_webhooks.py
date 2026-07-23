@@ -132,3 +132,12 @@ def test_sse_hub_publish_subscribe(tmp_path, monkeypatch):
         return got
 
     assert asyncio.run(go())["eventType"] == 101
+
+
+def test_sse_response_disables_proxy_buffering(tmp_path, monkeypatch):
+    wh = _fresh(tmp_path, monkeypatch)
+    request = wh.Request({"type": "http", "method": "GET", "path": "/webhooks/stream", "headers": []})
+    response = asyncio.run(wh.webhooks_stream(request))
+
+    assert response.headers["cache-control"] == "no-cache, no-transform"
+    assert response.headers["x-accel-buffering"] == "no"

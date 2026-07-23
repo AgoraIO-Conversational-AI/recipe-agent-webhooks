@@ -15,9 +15,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-	title: "Translator Recipe | Agora Conversational AI",
+	title: "Webhooks Recipe | Agora Conversational AI",
 	description:
-		"Recipe: real-time speech translation — speak the source language, hear the target.",
+		"Recipe: observe Agora Conversational AI agent lifecycle events through server-side webhooks.",
 	icons: {
 		icon: [
 			{ url: "/favicon.ico" },
