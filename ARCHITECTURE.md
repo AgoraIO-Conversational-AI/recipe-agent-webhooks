@@ -63,7 +63,7 @@ A single self-contained module, mounted via `app.include_router(webhooks.router)
 
 | Piece | Responsibility |
 | --- | --- |
-| `store_event` / `recent_events` / `reset_events` | Append-only SQLite store (`WEBHOOKS_DB_PATH`, default `/tmp/webhooks.db`). `recent_events` returns oldest-first for the timeline. |
+| `store_event` / `recent_events` / `reset_events` | Append-only SQLite store (`WEBHOOKS_DB_PATH`, default `server/webhooks.db` locally and `/tmp/webhooks.db` in Docker). `recent_events` returns oldest-first for the timeline. |
 | `verify_signature(secret, raw_body, signature_v2)` | Accept if no secret is configured (dev mode); otherwise require a matching `Agora-Signature-V2` HMAC-SHA256 over the raw body. |
 | `parse_event` / `event_display_name` | Normalize the NCS envelope (retain the raw payload verbatim); map `101`→"Agent started", `102`→"Agent stopped". |
 | `SseHub` | In-process fan-out of received events to connected SSE clients. |

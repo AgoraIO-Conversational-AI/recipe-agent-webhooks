@@ -29,8 +29,9 @@ plus `.with_labels({"recipe": "webhooks", "session": ...})`.
 - `102` — Agent stopped (left; includes a leave reason where Agora provides one)
 
 > **Note:** received NCS payloads can contain transcript or error data. The
-> SQLite store defaults to an ephemeral `/tmp/webhooks.db`, is gitignored, and a
-> **Clear** button (`POST /webhooks/reset`) wipes it. This recipe is **zero
+> SQLite store defaults to `server/webhooks.db` locally, is gitignored, and a
+> **Clear** button (`POST /webhooks/reset`) wipes it. Docker uses the ephemeral
+> `/tmp/webhooks.db` path. This recipe is **zero
 > provider-key**; the NCS secret is an Agora-side secret used only to verify the
 > callback signature.
 
@@ -40,6 +41,10 @@ plus `.with_labels({"recipe": "webhooks", "session": ...})`.
 - [Bun](https://bun.sh/)
 - [Agora CLI](https://github.com/AgoraIO/cli) — makes generating an App ID + App Certificate easy
 - [ngrok](https://ngrok.com/) (or any tunnel) — to expose the backend so Agora Console can reach `/ncsNotify`
+
+The same commands work on macOS, Linux, and Windows. On macOS/Linux, setup uses
+`python3`; on Windows, it uses the Python launcher (`py`) or `python`. WSL and
+virtualenv activation are not required.
 
 ## Run It
 
@@ -122,7 +127,7 @@ needed — OpenAI is Agora-managed.
 | `AGORA_APP_ID` | ✅ | — | Agora Console → Project → App ID |
 | `AGORA_APP_CERTIFICATE` | ✅ | — | Agora Console → Project → App Certificate |
 | `AGORA_NOTIFICATION_SECRET` | | — | Optional. NCS secret from Agora Console → Notifications. Enables HMAC-SHA256 signature verification. **Not** an LLM/provider key. |
-| `WEBHOOKS_DB_PATH` | | `/tmp/webhooks.db` | Where received events are stored (ephemeral by default). |
+| `WEBHOOKS_DB_PATH` | | `webhooks.db` | Where received events are stored. Relative paths resolve from `server/`; Docker uses `/tmp/webhooks.db`. |
 | `OPENAI_API_KEY` | | — | Optional — Agora manages the OpenAI key by default (keyless). Set only if your account requires it. |
 | `OPENAI_MODEL` | | `gpt-4o-mini` | OpenAI model |
 | `AGENT_GREETING` | | built-in | Optional opening line override |
