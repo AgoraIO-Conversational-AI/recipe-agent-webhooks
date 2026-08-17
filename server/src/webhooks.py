@@ -15,10 +15,11 @@ import time
 from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger("uvicorn.error")
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _db_path() -> str:
-    return os.getenv("WEBHOOKS_DB_PATH", "/tmp/webhooks.db")
+    return os.getenv("WEBHOOKS_DB_PATH") or os.path.join(_BASE_DIR, "webhooks.db")
 
 
 def _get_db() -> sqlite3.Connection:

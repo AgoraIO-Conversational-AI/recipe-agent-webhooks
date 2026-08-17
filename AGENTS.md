@@ -26,7 +26,8 @@ plus `.with_labels({"recipe": "webhooks", "session": ...})` for correlation.
 
 A single module mounted with `app.include_router(webhooks.router)`:
 - `store_event` / `recent_events` / `reset_events` — append-only SQLite store
-  (`WEBHOOKS_DB_PATH`, default `/tmp/webhooks.db`; `recent_events` is oldest-first).
+  (`WEBHOOKS_DB_PATH`, default `webhooks.db` in the server root;
+  `/tmp/webhooks.db` in Docker; `recent_events` is oldest-first).
 - `verify_signature(secret, raw_body, signature_v2)` — accept if no secret is set
   (dev mode); otherwise require a matching `Agora-Signature-V2` HMAC-SHA256.
 - `parse_event` / `event_display_name` — normalize the NCS envelope; `101`/`102`
@@ -60,7 +61,7 @@ A single module mounted with `app.include_router(webhooks.router)`:
 | `AGORA_APP_ID` | — | required |
 | `AGORA_APP_CERTIFICATE` | — | required |
 | `AGORA_NOTIFICATION_SECRET` | — | optional — Agora-side NCS secret; enables signature verification. NOT an LLM key |
-| `WEBHOOKS_DB_PATH` | `/tmp/webhooks.db` | optional — ephemeral SQLite store path |
+| `WEBHOOKS_DB_PATH` | `webhooks.db` | optional — SQLite store path; Docker uses `/tmp/webhooks.db` |
 | `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI model |
 | `OPENAI_API_KEY` | — | optional — BYO only if your account requires it |
 

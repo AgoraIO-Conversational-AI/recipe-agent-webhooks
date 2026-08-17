@@ -25,7 +25,8 @@ separate `llm/` service** in this recipe.
 ## The receiver — `src/webhooks.py`
 
 - `store_event` / `recent_events` / `reset_events` — append-only SQLite store
-  (`WEBHOOKS_DB_PATH`, default `/tmp/webhooks.db`; `recent_events` oldest-first).
+  (`WEBHOOKS_DB_PATH`, default `webhooks.db` in the server root;
+  `/tmp/webhooks.db` in Docker; `recent_events` oldest-first).
 - `verify_signature(secret, raw_body, signature_v2)` — accept if no secret is set
   (dev mode); otherwise require a matching `Agora-Signature-V2` HMAC-SHA256.
 - `parse_event` / `event_display_name` — normalize the NCS envelope; `101`/`102`
@@ -39,12 +40,12 @@ separate `llm/` service** in this recipe.
 Use the repo-root `README.md` for the full local flow (`bun run dev`) and the
 Console / ngrok setup. To work on this module directly:
 
-```bash
-cd server
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-pip install -r requirements-dev.txt   # pytest
-python src/server.py
+The root commands below select the correct virtualenv interpreter on macOS,
+Linux, and Windows, so activation is not required:
+
+```shell
+bun run setup:server
+bun run backend
 ```
 
 Tests:
@@ -66,7 +67,7 @@ Optional:
 | Variable | Default | Notes |
 | --- | :---: | --- |
 | `AGORA_NOTIFICATION_SECRET` | — | Agora-side NCS secret (Console → Notifications). Enables signature verification. **Not** an LLM/provider key. |
-| `WEBHOOKS_DB_PATH` | `/tmp/webhooks.db` | Where received events are stored (ephemeral by default). |
+| `WEBHOOKS_DB_PATH` | `webhooks.db` | Where received events are stored. Relative paths resolve from the server root; Docker uses `/tmp/webhooks.db`. |
 | `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI model |
 | `OPENAI_API_KEY` | — | BYO only — Agora manages the OpenAI key by default (keyless). Set only if your account requires it. |
 | `AGENT_GREETING` | built-in | Optional opening line override |

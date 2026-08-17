@@ -11,6 +11,14 @@ def _fresh(tmp_path, monkeypatch):
     return webhooks
 
 
+def test_default_db_path_is_in_server_root(monkeypatch):
+    monkeypatch.delenv("WEBHOOKS_DB_PATH", raising=False)
+    import webhooks
+    importlib.reload(webhooks)
+    expected = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "webhooks.db"))
+    assert os.path.normcase(webhooks._db_path()) == os.path.normcase(expected)
+
+
 def test_store_and_recent_roundtrip(tmp_path, monkeypatch):
     wh = _fresh(tmp_path, monkeypatch)
     rec = wh.store_event({"eventType": 101, "notifyMs": 111, "sid": "s1",
